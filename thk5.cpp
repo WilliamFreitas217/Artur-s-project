@@ -1,11 +1,304 @@
 #include <iostream>
+#include <fstream>
+#include <cstdio>
+
 using namespace std;
 
-class DadosChave{
+template <class T>
+class NoAVL{
+private:
+  NoAVL<T> *esq;
+  NoAVL<T> *dir;
+  T item;
+  int fb;
 public:
-    string chave;
-    int tam;
+  NoAVL();
+  NoAVL(T &item);
+  NoAVL<T> *&getEsq();
+  NoAVL<T> *&getDir();
+  T &getItem();
+  int getFb();
+  void setEsq(NoAVL<T> *&no);
+  void setDir(NoAVL<T> *&no);
+  void setItem(T &item);
+  void setFb(int fb);
 };
+template <class T>
+NoAVL<T>::NoAVL(){
+  this->esq = NULL;
+  this->dir = NULL;
+  this->fb = 0;
+}
+template <class T>
+NoAVL<T>::NoAVL(T &item){
+  this->item = item;
+  this->esq = NULL;
+  this->dir = NULL;
+  this->fb = 0;
+}
+template <class T>
+NoAVL<T> *&NoAVL<T>::getEsq(){
+  return esq;
+}
+template <class T>
+NoAVL<T> *&NoAVL<T>::getDir(){
+  return dir;
+}
+template <class T>
+T &NoAVL<T>::getItem(){
+  return item;
+}
+template <class T>
+int NoAVL<T>::getFb(){
+  return fb;
+}
+template <class T>
+void NoAVL<T>::setEsq(NoAVL<T> *&no){
+  esq = no;
+}
+template <class T>
+void NoAVL<T>::setDir(NoAVL<T> *&no){
+  dir = no;
+}
+template <class T>
+void NoAVL<T>::setItem(T &item){
+  this->item = item;
+}
+template <class T>
+void NoAVL<T>::setFb(int fb){
+  this->fb = fb;
+}
+
+template <class T>
+class AVL{
+private:
+  NoAVL<T> *raiz;
+  NoAVL<T> *&busca(T chave, NoAVL<T> *&no);
+  int insere(T &item, NoAVL<T> *&no);
+  void RSE(NoAVL<T> *&noDesce);
+  void RSD(NoAVL<T> *&noDesce);
+  void RDE(NoAVL<T> *&noDesce);
+  void RDD(NoAVL<T> *&noDesce);
+  void percorrePre(NoAVL<T> *no);
+  void percorrePos(NoAVL<T> *no);
+  void percorreCentral(NoAVL<T> *no);
+  void buscaProfundidade(string chave, NoAVL<T> *&no, int h);
+  void buscaProfundidade(string chave, NoAVL<T> *&no, int h);
+  NoAVL<T>* busca(T item,NoAVL<T> *no);
+public:
+  AVL();
+  void insere(T &item);
+  NoAVL<T> *&busca(T chave);
+  void percorrePre();
+  void percorrePos();
+  void percorreCentral();
+  void buscaProfundidade(string chave);
+  void buscaProfundidade(string);
+  NoAVL<T>* busca(T item);
+
+};
+template <class T>
+AVL<T>::AVL(){
+  raiz = NULL;
+}
+template <class T>
+void AVL<T>::insere(T &item){
+  insere(item, raiz);
+}
+template <class T>
+int AVL<T>::insere(T &item, NoAVL<T> *&no){
+  if(no == NULL){
+    no = new NoAVL<T>();
+    no->setItem(item);
+    return 1;
+  }
+  if(item.TAM<no->getItem().TAM){
+    int conferidor = insere(item, no->getEsq());
+    if(conferidor==1){ //inseriu na esquerda
+      // cout<<"aqui"<<endl;
+      if(no->getFb()==1){
+        no->setFb(0);
+        return 0;
+      }
+      else if(no->getFb()==0){
+        no->setFb(-1);
+      }
+      else{
+        if(no->getEsq()->getFb()==-1){
+          RSD(no);
+          no->setFb(0);
+          // cout<<"RSD"<<endl;
+          return 0;
+        }
+        else{
+          if(no->getEsq()->getFb()!=0){
+            // cout<<"RDD"<<endl;
+            RDD(no);
+            no->setFb(0);
+            return 0;
+          }
+        }
+      }
+      return 1;
+    }
+  }
+  if(item.TAM>no->getItem().TAM){
+    int conferidor = insere(item, no->getDir());
+    if(conferidor==1){ //inseriu na direita
+      // cout<<"aqui"<<endl;
+      if(no->getFb()==-1){
+        no->setFb(0);
+        return 0;
+      }
+      else if(no->getFb()==0){
+        no->setFb(1);
+      }
+      else{
+        if(no->getDir()->getFb()==1){
+          RSE(no);
+          no->setFb(0);
+          // cout<<"RSE"<<endl;
+          return 0;
+        }
+        else{
+          if(no->getDir()->getFb()!=0){
+            RDE(no);
+            no->setFb(0);
+            // cout<<"RDE"<<endl;
+            return 0;
+          }
+        }
+      }
+      return 1;
+    }
+  }
+  else if(item.TAM==no->getItem().TAM){
+    return 0;
+  }
+}
+template <class T>
+void AVL<T>::RSE(NoAVL<T> *&noDesce){
+  NoAVL<T> *p1= new NoAVL<T>();
+  *p1 = *noDesce->getDir();
+  noDesce->setDir(p1->getEsq());
+  p1->getEsq()=noDesce;
+  noDesce->setFb(0);
+  noDesce = p1;
+}
+
+template <class T>
+void AVL<T>::RSD(NoAVL<T> *&noDesce){
+  NoAVL<T> *p1= new NoAVL<T>();
+  *p1 = *noDesce->getEsq();
+  noDesce->setEsq(p1->getDir());
+  p1->getDir()=noDesce;
+  noDesce->setFb(0);
+  noDesce = p1;
+}
+
+template <class T>
+void AVL<T>::RDE(NoAVL<T> *&noDesce){
+  NoAVL<T> *p1= new NoAVL<T>();
+  *p1 = *noDesce->getDir();
+  NoAVL<T> *p2= new NoAVL<T>();
+  *p2 = *p1->getEsq();
+  p1->setEsq(p2->getDir());
+  p2->setDir(p1);
+  noDesce->setDir(p2->getEsq());
+  p2->setEsq(noDesce);
+  if(p2->getFb()== 1){
+    noDesce->setFb(-1);
+  }
+  else{
+    noDesce->setFb(0);
+  }
+  if(p2->getFb()== -1){
+    p1->setFb(1);
+  }
+  else{
+    p1->setFb(0);
+  }
+  noDesce = p2;
+}
+template <class T>
+void AVL<T>::RDD(NoAVL<T> *&noDesce){
+  NoAVL<T> *p1= new NoAVL<T>();
+  *p1 = *noDesce->getEsq();
+  NoAVL<T> *p2= new NoAVL<T>();
+  *p2 = *p1->getDir();
+  p1->setDir(p2->getEsq());
+  p2->setEsq(p1);
+  noDesce->setEsq(p2->getDir());
+  p2->setDir(noDesce);
+  if(p2->getFb()== -1){
+    noDesce->setFb(1);
+  }
+  else{
+    noDesce->setFb(0);
+  }
+  if(p2->getFb()== 1){
+    p1->setFb(-1);
+  }
+  else{
+    p1->setFb(0);
+  }
+  noDesce = p2;
+}
+template <class T>
+void AVL<T>::percorrePre(){
+  percorrePre(raiz);
+}
+template <class T>
+void AVL<T>::percorrePre(NoAVL<T> *no){
+  if(no!=NULL){
+    cout<<"Item:: "<<no->getItem().TAM<<" fb:: "<< no->getFb()<<endl;
+    percorrePre(no->getEsq());
+    percorrePre(no->getDir());
+  }
+}
+
+template <class T>
+void AVL<T>::buscaProfundidade(string chave, NoAVL<T> *&no, int h){
+  if(no!=NULL){
+    if(chave==no->getItem().TAM){
+      cout<<"sim "<< h<<endl;
+    }
+    else{
+      if(chave<no->getItem().TAM){
+        buscaProfundidade(chave, no->getEsq(), h+1);
+      }
+      if(chave>no->getItem().TAM){
+        buscaProfundidade(chave, no->getDir(), h+1);
+      }
+    }
+  }
+  else{
+    cout<<"nao"<<endl;
+  }
+}
+template <class T>
+void AVL<T>::buscaProfundidade(string chave){
+  buscaProfundidade(chave, raiz, 0);
+}
+
+template<class T>
+NoAVL<T>* AVL<T>::busca(T item,NoAVL<T> *no){
+    if(no!=NULL){
+        if(item.TAM > no->getItem().TAM){
+            busca(item,no->getDir());
+        }
+        if(item.TAM < no->getItem().TAM){
+            busca(item,no->getEsq());
+        }
+        // else{
+        return no;
+    }
+    return no;
+}
+template<class T>
+NoAVL<T>* AVL<T>::busca(T item){
+    return busca(item,raiz);
+}
 
 // --------------------Implementação Nó Lista
 template <class T>
@@ -76,6 +369,8 @@ public:
     NoLista<T>* busca(string);
     void remover(NoLista<T>*);
     void print();
+    int estaVazia();
+    int getQuantidade();
 };
 
 template<class T>
@@ -119,41 +414,62 @@ void Lista<T>::remover(NoLista<T> *NoListaParaRemover){
     }
 }
 
-void imprimeTabela(DadosChave item){
-    cout<<item.chave<<" - "<<item.tam<<endl;
-}
-
 template<class T>
 void Lista<T>::print(){
     NoLista<T> *p = prim->getProx();
     while(p!=NULL){
-        imprimeTabela(p->getItem());
+        cout<<p->getItem()<<endl;
         p = p->getProx();
     }
+}
+
+template<class T>
+int Lista<T>::estaVazia(){
+    if(prim==NULL)
+        return 1;
+    else
+        return 0;
+}
+
+template<class T>
+int Lista<T>::getQuantidade(){
+    int cont = 0;
+    NoLista<T> *p = prim->getProx();
+    while(p!=NULL){
+        cont++;
+        p = p->getProx();
+    }
+    return cont;
 }
 //------------------ fim Lista
 
 //------------------ Início Tabela Hash
 class TabHash{
 private:
-	Lista<DadosChave> *tabela;
+	Lista<string> *tabela;
 public:
+    int TAM;
 	TabHash();
-	void insere(DadosChave);
+	void insere(string);
 	unsigned long long int pow(int, int);
 	unsigned long long int converterChaveStringParaNatural(string);
 	int funcaoHash(string);
 	void print();
-    DadosChave codigo;
+    NoLista<string>* busca(string);
+    int estaVazia();
+    int getQuantidade();
+    float loadFactor();
 };
 
 TabHash::TabHash(){
-    tabela = new Lista<DadosChave>[11];
+    tabela = new Lista<string>[11];
+    this->TAM = 0;
 }
 
-void TabHash::insere(DadosChave item){
-    int indice = funcaoHash(item.chave);
-    tabela[indice].insere(item);
+void TabHash::insere(string chave){
+    int indice = funcaoHash(chave);
+    tabela[indice].insere(chave);
+    this->TAM = chave.size();
 }
 
 unsigned long long int TabHash::pow(int num, int expoente){
@@ -166,8 +482,10 @@ unsigned long long int TabHash::pow(int num, int expoente){
 
 void TabHash::print(){
 	for(int i = 0;i<11;++i){
-		cout<<"\tPosicao "<<i<<" :\n";
-		tabela[i].print();
+        if(!tabela[i].estaVazia()){
+		  cout<<"\tPosicao "<<i<<" :\n";
+		  tabela[i].print();
+        }
 	}
 }
 
@@ -185,285 +503,135 @@ int TabHash::funcaoHash( string chave ){
     int valorHash = k%11;
     return valorHash;
 }
+
+NoLista<string>* TabHash::busca(string chave){
+    int indice = funcaoHash(chave);
+    NoLista<string> *noDaChave = tabela[indice].busca( chave );
+    return noDaChave;
+}
+
+int TabHash::estaVazia(){
+    int check = 1;
+    for(int i = 0;i<11;i++){
+        if(!tabela[i].estaVazia()){
+            check = 0;
+            break;
+        }
+    }
+    return check;
+}
+
+int TabHash::getQuantidade(){
+    int cont = 0;
+    for(int i = 0;i<11;i++){
+        cont += tabela[i].getQuantidade();
+    }
+    return cont;
+}
+
+float TabHash::loadFactor(){
+    float lf = getQuantidade()/11.0;
+    return lf;
+}
+
+// int TabHash::quantItensLista(Lista<string> lista){
+//     int cont = 0;
+//     NoLista<T> *no = lista.get
+// }
+
+// int TabHash::quantItens(string chave){
+//     NoLista<string> *listaNo = busca(chave);
+//     for(int i=0;i<11;++i){
+
+//     }
+// }
 //------------------ fim tabela hash
 
 //------------------ início nó árvore
-template <class T>
-class NoArvore{
-private:
-    T item;
-    int fb;
-    NoArvore *esq, *dir;
-public: 
-    NoArvore();
-    NoArvore(T);
-    void setItem(T);    
-    void setEsq(NoArvore<T>*);    
-    void setDir(NoArvore<T>*);
-    void setFb(int);
-    T getItem();
-    NoArvore<T>*& getEsq();    
-    NoArvore<T>*& getDir();
-    int getFb();    
-};
 
-template <class T>
-NoArvore<T>::NoArvore(){
-    this->esq = NULL;
-    this->dir = NULL;
-    this->fb = 0;
-}
-template <class T>
-NoArvore<T>::NoArvore(T item){
-    this->item = item;
-    this->esq = NULL;
-    this->dir = NULL;
-    this->fb = 0;
-}
-
-template <class T>
-void NoArvore<T>::setItem(T item){
-    this->item = item;
-}
-template <class T>
-void NoArvore<T>::setEsq(NoArvore<T> *esq){
-    this->esq = esq;
-}
-template <class T>
-void NoArvore<T>::setDir(NoArvore<T> *dir){
-    this->dir = dir;
-}
-template <class T>
-void NoArvore<T>::setFb(int fb){
-    this->fb = fb;
-}
-
-template <class T>
-T NoArvore<T>::getItem(){
-    return item;
-}
-template <class T>
-NoArvore<T>*& NoArvore<T>::getEsq(){
-    return esq;
-}
-template <class T>
-NoArvore<T>*& NoArvore<T>::getDir(){
-    return dir;
-}
-template <class T>
-int NoArvore<T>::getFb(){
-    return fb;
-}
 // --------------- fim nó árvore
 
 //------------------ início arvore
-template <class T>
-class AVL{
-private:
-    NoArvore<T> *raiz;
-    int insere(T, NoArvore<T> *&);
-    void percorrePreOrdem(NoArvore<T>*);
-    void percorreCentral(NoArvore<T>*);
-    void percorrePosOrdem(NoArvore<T>*);
-    void RSE(NoArvore<T> *&);
-    void RSD(NoArvore<T> *&);
-    void RDD(NoArvore<T> *&);
-    void RDE(NoArvore<T> *&);
-public:
-    AVL();
-    void insere(T);
-    void percorrePreOrdem();
-    void percorreCentral();
-    void percorrePosOrdem();
-};
 
-template <class T>
-AVL<T>::AVL(){
-    this->raiz = NULL;
-}
 
-template <class T>
-void AVL<T>::RSE(NoArvore<T> *&noDesce){
-    NoArvore<T> *noSobe = noDesce->getDir();
-    noDesce->setDir( noSobe->getEsq());
-    noSobe->setEsq(noDesce);
-    noDesce->setFb(0);
-    noDesce = noSobe;
-}
-template <class T>
-void AVL<T>::RSD(NoArvore<T> *&noDesce){
-    NoArvore<T> *noSobe = noDesce->getEsq();
-    noDesce->setEsq( noSobe->getDir());
-    noSobe->setDir(noDesce);
-    noDesce->setFb(0);
-    noDesce = noSobe;
-}
-
-template <class T>
-void AVL<T>::RDE(NoArvore<T> *&no){
-    // cout<<"Entrou no RDE\n";
-    NoArvore<T> *p1 = no->getDir();
-    NoArvore<T> *p2 = p1->getEsq();
-    p1->setEsq( p2->getDir());
-    p2->setDir(p1);
-    no->setDir( p2->getEsq());
-    p2->setEsq(no);
-    if(p2->getFb()==1){
-        no->setFb(-1);
-    }
-    else{
-        no->setFb(0);
-    }
-    if(p2->getFb()==-1){
-        p1->setFb(1);
-    }
-    else{
-        p1->setFb(0);
-    }
-    no = p2;
-}
-template <class T>
-void AVL<T>::RDD(NoArvore<T> *&no){
-    NoArvore<T> *p1 = no->getEsq();
-    NoArvore<T> *p2 = p1->getDir();
-    p1->setDir( p2->getEsq());
-    p2->setEsq(p1);
-    no->setEsq( p2->getDir());
-    p2->setDir(no);
-    if(p2->getFb()==-1){
-        no->setFb(1);
-    }
-    else{
-        no->setFb(0);
-    }
-    if(p2->getFb()==1){
-        no->setFb(-1);
-    }
-    else{
-        p1->setFb(0);
-    }
-    no = p2;
-}
-
-template <class T>
-int AVL<T>::insere(T item, NoArvore<T> *&no){
-    if(no==NULL){//insere
-        no = new NoArvore<T>(item);
-        return 1;
-    }
-    else if(no->getItem().codigo.tam > item.codigo.tam){
-        int h = insere(item,no->getEsq());
-        if(h==1){// sub-arvore esquerda cresceu
-            if(no->getFb()==1){
-                no->setFb(0);
-                return 0;
-            }
-            else if(no->getFb()==0){
-                no->setFb(-1);
-            }
-            else{
-                if(no->getEsq()->getFb()==-1){
-                    RSD(no);
-                }
-                else{
-                    RDD(no);
-                }
-                no->setFb(0);
-                return 0;
-            }
-            return 1;
-        }
-    }
-    else if(no->getItem().codigo.tam < item.codigo.tam){
-        int h = insere(item,no->getDir());
-        if(h==1){//sub-arvore direita cresceu
-            if(no->getFb()==-1){
-                no->setFb(0);
-                return 0;
-            }
-            else if(no->getFb()==0){
-                no->setFb(1);
-            }
-            else{
-                if(no->getDir()->getFb()==1){
-                    RSE(no);
-                }
-                else{
-                    RDE(no);
-                }
-                no->setFb(0);
-                return 0;
-            }
-            return 1;
-        }
-    }
-    else{
-        // cout<<"Item ja esta na arvore\n";
-        return 0;
-    }
-    return 0;
-}
-template <class T>
-void AVL<T>::insere(T item){
-    insere(item,raiz);
-}
-
-template <class T>
-void AVL<T>::percorrePreOrdem(NoArvore<T> *no){
-    if(no!=NULL){
-        // cout<<no->getItem()<<endl;
-        no->getItem().print();
-        percorrePreOrdem(no->getEsq());
-        percorrePreOrdem(no->getDir());
-    }
-}
-template <class T>
-void AVL<T>::percorreCentral(NoArvore<T> *no){
-    if(no!=NULL){
-        percorreCentral(no->getEsq());
-        cout<<no->getItem()<<endl;
-        percorreCentral(no->getDir());
-    }
-}
-template <class T>
-void AVL<T>::percorrePosOrdem(NoArvore<T> *no){
-    if(no!=NULL){
-        percorrePosOrdem(no->getEsq());
-        percorrePosOrdem(no->getDir());
-        cout<<no->getItem()<<endl;
-    }
-}
-
-template <class T>
-void AVL<T>::percorrePreOrdem(){
-    percorrePreOrdem(raiz);
-}
-template <class T>
-void AVL<T>::percorreCentral(){
-    percorreCentral(raiz);
-}
-template <class T>
-void AVL<T>::percorrePosOrdem(){
-    percorrePosOrdem(raiz);
-}
-//----------------- fim implementação Árvore
 
 int main(){
     AVL<TabHash> arvore;
-	TabHash table;
-    DadosChave a;//b,c;
-    a.chave = "tkek kelk";
-    a.tam = a.chave.size();
-    table.codigo = a;
-    // imprimeTabela(table.codigo);
-    // b.chave = "tkek yy ykelk";    
-    // b.tam = b.chave.size();
-    // c.chave = "tkek kelk hhh";    
-    // c.tam = c.chave.size();
-    arvore.insere(table);
-    // arvore.insere(b);
-    // arvore.insere(c);
-    // table.print();
-    arvore.percorrePreOrdem();    
+    ifstream arquivo;
+
+    string linha;
+    arquivo.open("chaves.txt");
+    long unsigned int maiorString = 0;
+    while(getline(arquivo,linha)){
+        if(maiorString<linha.size())
+            maiorString = linha.size();
+    }
+    arquivo.close();
+    TabHash *tables = new TabHash[maiorString+1];
+
+    arquivo.open("chaves.txt");
+    while(getline(arquivo,linha)){
+        tables[linha.size()].insere(linha);
+    }
+    arquivo.close();
+
+    for(long unsigned int i = 1;i<=maiorString;i++){
+        if(tables[i].TAM!=0)
+            // cout<<"aqui\n";
+            arvore.insere(tables[i]);
+    }
+
+    // cin>>linha;
+    while(getline(cin,linha)){
+        TabHash aux;
+
+        aux.insere(linha);
+        arvore.buscaProfundidade(linha);
+
+        NoAVL<TabHash> *no = arvore.busca(aux);
+        if(no!=NULL){
+            // no->getItem().print();
+            cout<<no->getItem().loadFactor()<<endl;
+        }
+        else{
+            cout<<"chave nao encontrada\n";
+        }
+        // cin>>linha;
+    }
+
+    // arquivo.open("1.in");
+    // while(getline(arquivo,linha)){
+    //     TabHash aux;
+
+    //     aux.insere(linha);
+    //     cout<<arvore.buscaProfundidade(linha)<<" ";
+
+    //     NoArvore<TabHash> *no = arvore.busca(aux);
+    //     if(no!=NULL){
+    //         // no->getItem().print();
+    //         cout<<no->getItem().loadFactor()<<endl;
+    //     }
+    //     else{
+    //         cout<<"chave nao encontrada\n";
+    //     }
+    // }
+    // arquivo.close();
+
+    // arvore.percorrePreOrdem();
+
+
+    // TabHash aux;
+
+    // aux.insere("Peludo");
+    // cout<<arvore.buscaProfundidade("Artur")<<endl;
+
+    // NoArvore<TabHash> *no = arvore.busca(aux);
+    // if(no!=NULL){
+    //     no->getItem().print();
+    // }
+    // else{
+    //     cout<<"chave nao encontrada\n";
+    // }
+    // cout<<no->getItem().loadFactor()<<endl;
 	return 0;
 }
